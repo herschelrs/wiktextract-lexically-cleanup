@@ -15,8 +15,7 @@ def main():
     try:
         with open(args.input, 'r') as infile:
             for line in infile:
-                print(line)
-                # items.append(json.loads(line))
+                items.append(json.loads(line))
     except FileNotFoundError:
         print(f"The input file {args.input} was not found.")
         exit(1)
