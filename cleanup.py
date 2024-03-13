@@ -2,42 +2,39 @@ import argparse
 import json
 from collections import defaultdict
 
-
-items = []
-
+parsed_entries = []
 
 def main():
-    parser = argparse.ArgumentParser(description='Copy contents from an input file to an output file.')
+  parser = argparse.ArgumentParser(description='Copy contents from an input file to an output file.')
 
-    parser.add_argument('--input', type=str, required=True, help='The path of the input file')
-    parser.add_argument('--output', type=str, required=True, help='The path of the output file')
+  parser.add_argument('--input', type=str, required=True, help='The path of the input file')
+  parser.add_argument('--output', type=str, required=True, help='The path of the output file')
 
-    args = parser.parse_args()
+  args = parser.parse_args()
 
-    try:
-        with open(args.input, 'r') as infile:
-            for line in infile:
-                items.append(json.loads(line))
-        
-        parsed_entries = [defin for item in items for defin in parse_entry(item)]
-        all_entries_matching_word = defaultdict(list)
-        for entry in parsed_entries:
-          all_entries_matching_word[entry['word']].append(entry)
-        
-    except FileNotFoundError:
-        print(f"The input file {args.input} was not found.")
-        exit(1)
+  try:
+    with open(args.input, 'r') as infile:
+      for line in infile:
+        parsed_entries.extend(parse_entry(json.loads(line)))
 
-    try:
-        with open(args.output, 'w') as outfile:
-            for entry in all_entries_matching_word:
-              outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
+    all_entries_matching_word = defaultdict(list)
+    for entry in parsed_entries:
+      all_entries_matching_word[entry['word']].append(entry)
+      
+  except FileNotFoundError:
+    print(f"The input file {args.input} was not found.")
+    exit(1)
 
-    except IOError as e:
-        print(f"An error occurred while writing to the file {args.output}: {e}")
-        exit(1)
+  try:
+    with open(args.output, 'w') as outfile:
+      for entry in all_entries_matching_word:
+        outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
 
-    print(f"Parsed dictionary file and wrote to {args.output}")
+  except IOError as e:
+    print(f"An error occurred while writing to the file {args.output}: {e}")
+    exit(1)
+
+  print(f"Parsed dictionary file and wrote to {args.output}")
 
 from collections import defaultdict
 import re
