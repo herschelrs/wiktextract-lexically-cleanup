@@ -8,12 +8,12 @@ python cleanup.py --input input.json --output output.jsonl
 ```
 Output is also in JSON Lines format, each line a list with two items, the first a word and the second a list of entries with that word. The output is intended to be read in line-by-line and used to construct a dictionary with each word as a key.
 
-Output file for full Spanish dictionary is 152MB as of 2024-03-13.
+Output file for full Spanish dictionary is 199MB as of 2024-03-13.
 
 ## Context and tradeoffs
 Wiktextract provides high quality but flawed computational dictionaries based on Wiktionary data. I was inspired by [Ebook dictionary creator](https://github.com/Vuizur/ebook_dictionary_creator) but needed a number of different features for my purposes. 
 
-Generally the goal was to be compatible with the API I had already written for Glossa, and to present a reasonable and legible interpretation of the original entries. In many cases I had to collapse certain distinctions to accomodate low quality Wiktionary entries, as well as some parsing failures from Wiktextract. Some example of this are eg. using any beginning and ending parenthesized sections in a gloss as a `label` and `gloss` respectively (see below), regardless of whether it was written using a template in the original entry, and on the other hand dropping some correctly entered templates when there are multiple glosses in the Wiktextract data. This results in a handful of entries with either slightly unnatural `template` or `gloss` fields, or with those fields missing altogether. Nonetheless I'm pretty happy with the choices I made. There are code comments explaining some of these choices. 
+Generally the goal was to be compatible with the API I had already written for Glossa, and to present a reasonable and legible interpretation of the original entries. In many cases I had to collapse certain distinctions to accomodate low quality Wiktionary entries, as well as some parsing failures from Wiktextract. Some example of this are eg. using any beginning and ending parenthesized sections in a gloss as a `label` and `gloss` respectively (see below), regardless of whether it was written using a template in the original entry, and on the other hand dropping some correctly entered templates when there are multiple glosses in the Wiktextract data. This results in a handful of entries with either slightly unnatural `template` or `gloss` values, or with those fields missing altogether. Nonetheless I'm pretty happy with the choices I made. There are code comments explaining some of these choices. 
 
 Most words have only one entry but ~50k have several. Some of these correspond to multiple entries in the Wiktextract data (usually for unrelated etymologies or different parts of speech), and some come from entries which have been split up, eg. intersecting inflected forms for separate lemmas, or lemmas which intersect with inflected forms of other lemmas, etc.
 
@@ -28,3 +28,4 @@ Most words have only one entry but ~50k have several. Some of these correspond t
     - these are a large fraction of all entries, but unfortunately do not cover every inflected form of every lemma, even those recorded in `forms`.
 	- `form_of` entries have in their `definition`s the entry's specific inflection and lemma, eg 'second-person singular imperative of fresar'
 - `from_alt_of` - optional, boolean, identifies `form_of` entries which came from sense with an `alt_of` tag in the Wiktextract data. These are usually alternative or deprecated spellings.
+- `from_forms` - optional, boolean, identifies `form_of` entries which were population from the list of inflected forms on a lemma, and which were absent as entries in the Wiktextract data.

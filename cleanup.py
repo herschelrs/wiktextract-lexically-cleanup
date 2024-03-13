@@ -20,6 +20,17 @@ def main():
     all_entries_matching_word = defaultdict(list)
     for entry in parsed_entries:
       all_entries_matching_word[entry['word']].append(entry)
+
+    form_of_entries_from_forms = defaultdict(list)
+
+    for word in all_entries_matching_word:
+      for entry in all_entries_matching_word[word]:
+        if entry.get('forms'):
+          for form in entry.get('forms'):
+            if form not in all_entries_matching_word and form not in form_of_entries_from_forms:
+              form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
+    
+    all_entries_matching_word = {**form_of_entries_from_forms, **all_entries_matching_word}
       
   except FileNotFoundError:
     print(f"The input file {args.input} was not found.")
