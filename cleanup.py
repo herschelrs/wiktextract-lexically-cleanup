@@ -31,7 +31,7 @@ def main():
     try:
         with open(args.output, 'w') as outfile:
             for entry in all_entries_matching_word:
-              outfile.write(json.dumps([entry: all_entries_matching_word[entry]]) + "\n")
+              outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
 
     except IOError as e:
         print(f"An error occurred while writing to the file {args.output}: {e}")
