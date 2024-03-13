@@ -56,25 +56,13 @@ def group_senses(entry):
   groups = defaultdict(list)
   for sense in entry['senses']:
     grouping = ""
-    # tag_sense = "".join(tags_for_defin(sense))
 
     # I may end up wanting to check if the tag is not present in the gloss. currently this doesn't matter because these tags are never in the gloss
     grouping += "".join(tags_for_defin(sense))
-
-    # get_gender_by_sense creates a list in a specific order, so if we have both f and m they will always be in that order
-    # gender_sense = "".join(get_gender_by_sense(sense))
     grouping += "".join(get_gender_by_sense(sense))
-
     grouping += sense['form_of'][0]['word'] if sense.get("form_of") else ""
 
     groups[grouping].append(sense)
-    # if sense.get('form_of'):
-    #   form = sense['form_of'][0]['word']
-    #   groups[form + gender_sense].append(sense)
-    # elif gender_sense:
-    #   groups[gender_sense].append(sense)
-    # else:
-    #   groups[None].append(sense)
   return list(groups.values())
 
 FAILED_FORM_OF_PROBLEMATIC_CONJUGATIONS = ['infinitive', 'gerund', 'preterite', 'imperfect', 'indicative']
@@ -126,8 +114,7 @@ def is_failed_form_of(entry):
     ])
 )
 
-def rip_label_gloss(orig_gloss, extra_labels):
-  # change this function name
+def rip_defin_label_gloss(orig_gloss, extra_labels):
   if orig_gloss == None:
     return {"definition": None}
 
@@ -145,7 +132,6 @@ def rip_label_gloss(orig_gloss, extra_labels):
       label += ", " + extra_tag_label
     else:
       label = extra_tag_label
-    # label = (label if label else "") + ", " + extra_tag_label
 
   return {k: v for k, v in [("label", label), ("definition", definition.strip() if definition else None), ("gloss", gloss)] if v is not None}
 
@@ -153,14 +139,12 @@ def clean_glosses(senses):
   definitions = []
   for sense in senses:
     if len(sense.get('raw_glosses', [])) == 1:
-    # if "raw_glosses" in sense and len(sense['raw_glosses']) == 1:
       definitions.append((sense['raw_glosses'][0], tags_for_defin(sense)))
     elif sense.get("glosses"):
-    # elif "glosses" in sense:
       definitions.append((", ".join([remove_ending_colon(gloss) for gloss in sense['glosses']]), tags_for_defin(sense)))
     else:
       definitions.append((None, tags_for_defin(sense)))
-  return [rip_label_gloss(*defin) for defin in definitions]
+  return [rip_defin_label_gloss(*defin) for defin in definitions]
 
 def remove_ending_colon(s):
   if s.endswith(":"):
@@ -185,7 +169,6 @@ def parse_multiple_form_of(group):
 
 def parse_sense_group(group, entry):
   parsed = {}
-  # if 'form_of' not in group[0]:
   if not group[0].get('form_of'):
     parsed["definitions"] = clean_glosses(group)
   else:
@@ -205,8 +188,8 @@ def parse_sense_group(group, entry):
 
   # wiktextract is failing to get gender for some less common gender values in the head. this misses <50 entries which have ~valid gender head templates and are failing for unclear reasons
   head_template_arg_values = [value for values in [template['args'].values() for template in entry['head_templates'] if template['args']] for value in values] if 'head_templates' in entry else []
+  # originally included 'gneut' in this list which is ~30 -e -x -@ neologisms in spanish. I expect this will be more complicated for other languages
   if any(item in head_template_arg_values for item in ['mfequiv', ]) and not gender:
-    # originally included 'gneut' in this list which is ~30 -e -x -@ neologisms in spanish
     gender = ['m', 'f']
 
   if gender:
@@ -219,7 +202,6 @@ def is_combined_with_form_of(sense):
         ])
 
 def pre_parse_alt_of(sense):
-  # if 'alt_of' in sense:
   if sense.get('alt_of'):
     sense['form_of'] = sense['alt_of']
 
@@ -240,7 +222,6 @@ def extract_inflected_forms(forms):
   return [item for item in
           [form['form'] for form in forms
             if all([tag not in form['tags'] for tag in ['table-tags', 'inflection-template', 'class']]) ]
-            # if True ]
           if item != '-']
 
 def parse_entry(entry):
@@ -248,8 +229,6 @@ def parse_entry(entry):
 
   main_props = {"word": entry['word'], "pos": entry['pos']}
 
-
-  # if "forms" in entry:
   if entry.get('forms'):
     main_props['forms'] = extract_inflected_forms(entry['forms'])
 
@@ -258,13 +237,10 @@ def parse_entry(entry):
 
 def get_gender_by_sense(sense):
   result = []
-  # if 'tags' not in sense:
   if not sense.get('tags'):
     return result
-  # if "masculine" in sense['tags']:
   if 'masculine' in sense.get('tags'):
     result.append("m")
-  # if "feminine" in sense['tags']:
   if 'feminine' in sense.get('tags'):
     result.append("f")
   return result
