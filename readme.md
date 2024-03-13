@@ -4,7 +4,7 @@ Requires [Wiktextract](https://github.com/tatuylonen/wiktextract) dictionary in 
 
 Should be invoked with:
 ```
-python cleanup.py --input input.json --output output.json
+python cleanup.py --input input.json --output output.jsonl
 ```
 Output is also in JSON Lines format, each line a list with two items, the first a word and the second a list of entries with that word. The output is intended to be read in line-by-line and used to construct a dictionary with each word as a key.
 
