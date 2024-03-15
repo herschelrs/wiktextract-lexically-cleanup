@@ -16,6 +16,7 @@ def main():
     with open(args.input, 'r') as infile:
       for line in infile:
         parsed_entries.extend(parse_entry(json.loads(line)))
+    print("finished loading and parsing input file")
 
     all_entries_matching_word = defaultdict(list)
     for entry in parsed_entries:
@@ -23,13 +24,23 @@ def main():
 
     form_of_entries_from_forms = defaultdict(list)
 
-    for word in all_entries_matching_word:
-      for entry in all_entries_matching_word[word]:
-        if entry.get('forms'):
-          for form in entry.get('forms'):
-            if form not in all_entries_matching_word and form not in form_of_entries_from_forms:
-              form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
+    # for word in all_entries_matching_word:
+    #   for entry in all_entries_matching_word[word]:
+    #     if entry.get('forms'):
+    #       for form in entry.get('forms'):
+    #         if form not in all_entries_matching_word and form not in form_of_entries_from_forms:
+    #           form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
     
+    # all_entries_matching_word = {**form_of_entries_from_forms, **all_entries_matching_word}
+    
+    for word in list(all_entries_matching_word.keys()):
+      for entry in all_entries_matching_word[word]:
+        # print(entry)
+        for form in entry.get('forms', []):
+          if not any([entry.get("form_of", "") == word for entry in all_entries_matching_word[form]]) :
+            if not any([entry.get("form_of", "") == word for entry in form_of_entries_from_forms[form]]):
+              form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
+
     all_entries_matching_word = {**form_of_entries_from_forms, **all_entries_matching_word}
       
   except FileNotFoundError:
