@@ -24,24 +24,16 @@ def main():
 
     form_of_entries_from_forms = defaultdict(list)
 
-    # for word in all_entries_matching_word:
-    #   for entry in all_entries_matching_word[word]:
-    #     if entry.get('forms'):
-    #       for form in entry.get('forms'):
-    #         if form not in all_entries_matching_word and form not in form_of_entries_from_forms:
-    #           form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
-    
-    # all_entries_matching_word = {**form_of_entries_from_forms, **all_entries_matching_word}
-    
     for word in list(all_entries_matching_word.keys()):
       for entry in all_entries_matching_word[word]:
-        # print(entry)
         for form in entry.get('forms', []):
           if not any([entry.get("form_of", "") == word for entry in all_entries_matching_word[form]]) :
             if not any([entry.get("form_of", "") == word for entry in form_of_entries_from_forms[form]]):
               form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
 
-    all_entries_matching_word = {**form_of_entries_from_forms, **all_entries_matching_word}
+    completed_dict = {}
+    for word in set([*all_entries_matching_word.keys(), *form_of_entries_from_forms.keys()]):
+      completed_dict[word] = [*all_entries_matching_word[word], *form_of_entries_from_forms[word]]
       
   except FileNotFoundError:
     print(f"The input file {args.input} was not found.")
@@ -49,8 +41,8 @@ def main():
 
   try:
     with open(args.output, 'w') as outfile:
-      for entry in all_entries_matching_word:
-        outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
+      for entry in completed_dict:
+        outfile.write(json.dumps([entry, completed_dict[entry]]) + "\n")
 
   except IOError as e:
     print(f"An error occurred while writing to the file {args.output}: {e}")
