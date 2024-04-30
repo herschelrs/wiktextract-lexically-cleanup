@@ -3,12 +3,14 @@ import json
 from collections import defaultdict
 
 parsed_entries = []
+all_entries_matching_word = defaultdict(list)
 
 def main():
   parser = argparse.ArgumentParser(description='Copy contents from an input file to an output file.')
 
   parser.add_argument('--input', type=str, required=True, help='The path of the input file')
   parser.add_argument('--output', type=str, required=True, help='The path of the output file')
+  parser.add_argument('--no-post-process', type=bool, required=False, help='Just parse entries')
 
   args = parser.parse_args()
 
@@ -18,22 +20,33 @@ def main():
         parsed_entries.extend(parse_entry(json.loads(line)))
     print("finished loading and parsing input file")
 
-    all_entries_matching_word = defaultdict(list)
     for entry in parsed_entries:
       all_entries_matching_word[entry['word']].append(entry)
 
-    form_of_entries_from_forms = defaultdict(list)
+    # form_of_entries_from_forms = defaultdict(list)
 
-    for word in list(all_entries_matching_word.keys()):
-      for entry in all_entries_matching_word[word]:
-        for form in entry.get('forms', []):
-          if not any([entry.get("form_of", "") == word for entry in all_entries_matching_word[form]]) :
-            if not any([entry.get("form_of", "") == word for entry in form_of_entries_from_forms[form]]):
-              form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
+    # for word in list(all_entries_matching_word.keys()):
+    #   for entry in all_entries_matching_word[word]:
+    #     for form in entry.get('forms', []):
+    #       if not any([entry.get("form_of", "") == word for entry in all_entries_matching_word[form]]) :
+    #         if not any([entry.get("form_of", "") == word for entry in form_of_entries_from_forms[form]]):
+    #           form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
 
-    completed_dict = {}
-    for word in set([*all_entries_matching_word.keys(), *form_of_entries_from_forms.keys()]):
-      completed_dict[word] = [*all_entries_matching_word[word], *form_of_entries_from_forms[word]]
+    # completed_dict = {}
+    # for word in set([*all_entries_matching_word.keys(), *form_of_entries_from_forms.keys()]):
+    #   completed_dict[word] = [*all_entries_matching_word[word], *form_of_entries_from_forms[word]]
+
+    if not args.no_post_process:
+      
+      for word in list(all_entries_matching_word.keys()):
+        for entry in all_entries_matching_word[word]:
+          for form in entry.get("forms", []):
+            new_form_of = {"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []}
+            if not any([form_entry['pos'] == entry['pos'] and form_entry.get("form_of") == word for form_entry in all_entries_matching_word[form]]):
+              all_entries_matching_word[form].append(new_form_of)
+      
+      print("finished extra processing on dictionary output")
+
       
   except FileNotFoundError:
     print(f"The input file {args.input} was not found.")
@@ -41,14 +54,15 @@ def main():
 
   try:
     with open(args.output, 'w') as outfile:
-      for entry in completed_dict:
-        outfile.write(json.dumps([entry, completed_dict[entry]]) + "\n")
+      for entry in all_entries_matching_word:
+        # outfile.write(json.dumps([entry, completed_dict[entry]]) + "\n")
+        outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
 
   except IOError as e:
     print(f"An error occurred while writing to the file {args.output}: {e}")
     exit(1)
 
-  print(f"Parsed dictionary file and wrote to {args.output}")
+  print(f"wrote output to {args.output}")
 
 from collections import defaultdict
 import re
