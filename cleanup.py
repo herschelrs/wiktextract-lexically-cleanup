@@ -23,19 +23,6 @@ def main():
     for entry in parsed_entries:
       all_entries_matching_word[entry['word']].append(entry)
 
-    # form_of_entries_from_forms = defaultdict(list)
-
-    # for word in list(all_entries_matching_word.keys()):
-    #   for entry in all_entries_matching_word[word]:
-    #     for form in entry.get('forms', []):
-    #       if not any([entry.get("form_of", "") == word for entry in all_entries_matching_word[form]]) :
-    #         if not any([entry.get("form_of", "") == word for entry in form_of_entries_from_forms[form]]):
-    #           form_of_entries_from_forms[form].append({"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []})
-
-    # completed_dict = {}
-    # for word in set([*all_entries_matching_word.keys(), *form_of_entries_from_forms.keys()]):
-    #   completed_dict[word] = [*all_entries_matching_word[word], *form_of_entries_from_forms[word]]
-
     if not args.no_post_process:
       
       for word in list(all_entries_matching_word.keys()):
