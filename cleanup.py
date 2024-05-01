@@ -25,7 +25,7 @@ def main():
 
     if not args.no_post_process:
 
-      for (word, entries) in all_entries_matching_word.items():
+      for (word, entries) in list(all_entries_matching_word.items()):
         for defin in entries:
           if defin.get("forms"):
             for form in defin.get("forms"):
@@ -33,16 +33,16 @@ def main():
                   any([
                     lemma_defin.get("pos") == defin.get("pos") and
                     form in lemma_defin.get("forms", [])
-                    for lemma_defin in all_entries_matching_word.get(lemma)
+                    for lemma_defin in all_entries_matching_word.get(lemma, [])
                   ])
-                  for lemma in find_lemmas_from_form_of_defin(defin)
+                  for lemma in find_lemmas_from_form_of_defin(defin, all_entries_matching_word)
                 ]):
                 break
               else:
                 if not any([
                   form_defin.get("pos") == defin.get("pos") and 
                   form_defin.get("form_of") == defin['word']
-                  for form_defin in all_entries_matching_word.get(form)]):
+                  for form_defin in all_entries_matching_word.get(form, [])]):
                     new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": word, "definitions": []}
                     all_entries_matching_word[form].append(new_form_of)
 
@@ -303,7 +303,7 @@ def get_gender_by_sense(sense):
     result.append("f")
   return result
 
-def find_lemmas_from_form_of_defin(defin, forms_set=None, pos=None, first_call=True, exclude_lemma_if_word=False):
+def find_lemmas_from_form_of_defin(defin, entries, forms_set=None, pos=None, first_call=True, exclude_lemma_if_word=False):
   pos = pos if pos else defin['pos']
   forms_set = forms_set if forms_set else set()
   form = defin.get("form_of")
@@ -322,7 +322,7 @@ def find_lemmas_from_form_of_defin(defin, forms_set=None, pos=None, first_call=T
 
     child_lemmas = {lemma
       for form_defin in entries.get(form)
-        for lemma in find_lemmas_from_form_of_defin(form_defin, forms_set, pos, False)}
+        for lemma in find_lemmas_from_form_of_defin(form_defin, entries, forms_set, pos, False)}
 
     if first_call:
     # if first_call and exclude_lemma_if_word:
