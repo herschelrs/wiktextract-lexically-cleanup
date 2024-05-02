@@ -20,6 +20,9 @@ Most words have only one entry but ~50k have several. Some of these correspond t
 ## Spec for entries
 - `word` - the word form
 - `pos` - part of speech
+- `gender` - optional, a *list* of genders as strings `'f'` or `'m'`. 
+    - uses both genders for words where both genders are valid
+    - unfortunately doesn't include a gender for modern gender-neutral terms like 'amigue'
 - `definitions` - list of dictionaries with `definition` and optionally `label` and `gloss` fields. 
     - `label` usually includes morphological, syntactic, or dialectological information, and `gloss` is a secondary gloss or disambiguation for the definition.
     - note that `definition` is missing or `null` in a very small number of entries for Spanish.
