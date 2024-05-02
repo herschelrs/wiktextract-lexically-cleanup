@@ -24,12 +24,20 @@ def main():
       all_entries_matching_word[entry['word']].append(entry)
 
     if not args.no_post_process:
+      # some forms lists contain duplicates:
+      for word in all_entries_matching_word:
+        for defin in all_entries_matching_word[word]:
+          if defin.get("forms"):
+            defin['forms'] = list(set(defin['forms']))
+
 
       for (word, entries) in list(all_entries_matching_word.items()):
         for defin in entries:
           if defin.get("forms"):
             for form in defin.get("forms"):
-              if defin.get("form_of") and any([
+              if form == word:
+                None
+              elif defin.get("form_of") and any([
                   any([
                     lemma_defin.get("pos") == defin.get("pos") and
                     form in lemma_defin.get("forms", [])
@@ -37,11 +45,13 @@ def main():
                   ])
                   for lemma in find_lemmas_from_form_of_defin(defin, all_entries_matching_word)
                 ]):
-                break
+                None
               else:
                 if not any([
                   form_defin.get("pos") == defin.get("pos") and 
-                  form_defin.get("form_of") == defin['word']
+                  defin['word'] in find_lemmas_from_form_of_defin(form_defin, all_entries_matching_word)
+                  # form_defin.get("form_of") == defin['word']
+
                   for form_defin in all_entries_matching_word.get(form, [])]):
                     new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": word, "definitions": []}
                     all_entries_matching_word[form].append(new_form_of)
