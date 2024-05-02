@@ -49,8 +49,9 @@ def main():
               else:
                 if not any([
                   form_defin.get("pos") == defin.get("pos") and 
-                  defin['word'] in find_lemmas_from_form_of_defin(form_defin, all_entries_matching_word)
-                  # form_defin.get("form_of") == defin['word']
+                  (defin['word'] in find_lemmas_from_form_of_defin(form_defin, all_entries_matching_word) or 
+                  defin['word'] in form_defin.get("forms", [])
+                  )
 
                   for form_defin in all_entries_matching_word.get(form, [])]):
                     new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": word, "definitions": []}
