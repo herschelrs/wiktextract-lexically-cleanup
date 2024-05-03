@@ -33,61 +33,7 @@ def main():
 
       for (word, entries) in list(all_entries_matching_word.items()):
         for defin in entries:
-          if defin.get("forms"):
-            for form in defin.get("forms"):
-              if form == word:
-                None
-              elif defin.get("form_of") and any([
-                  any([
-                    lemma_defin.get("pos") == defin.get("pos") and
-                    form in lemma_defin.get("forms", [])
-                    for lemma_defin in all_entries_matching_word.get(lemma, [])
-                  ])
-                  for lemma in find_lemmas_from_form_of_defin(defin, all_entries_matching_word)
-                ]):
-                None
-              else:
-                if not any([
-                  form_defin.get("pos") == defin.get("pos") and 
-                  (defin['word'] in find_lemmas_from_form_of_defin(form_defin, all_entries_matching_word) or 
-                  defin['word'] in form_defin.get("forms", [])
-                  )
-
-                  for form_defin in all_entries_matching_word.get(form, [])]):
-                    new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": word, "definitions": []}
-                    all_entries_matching_word[form].append(new_form_of)
-
-
-
-      # intermediate messy stuff, remove in next commit
-
-      # for (word, entries) in all_entries_matching_word.items():
-      #   for defin in entries:
-      #     if defin.get("forms"):
-      #       if defin.get("form_of"):
-      #         for form in defin.get("forms"):
-      #           for lemma in find_lemmas_from_form_of_defin(defin):
-      #             if not any([
-      #               lemma_defin.get('pos') == defin.get('pos') and
-      #               form in lemma_defin.get("forms", [])
-      #               for lemma_defin in all_entries_matching_word.get("lemma", [])
-      #             ]):
-
-      #       else:
-      #         for form in defin.get("forms"):
-      #           if not any([form_defin.get("pos") == defin.get("pos") and 
-      #           form_defin.get("form_of") == defin['word']
-      #           for form_defin in all_entries_matching_word.get[form]]):
-      #             new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": word, "definitions": []}
-      #             all_entries_matching_word[form].append(new_form_of)
-
-
-      # for word in list(all_entries_matching_word.keys()):
-      #   for entry in all_entries_matching_word[word]:
-      #     for form in entry.get("forms", []):
-      #       new_form_of = {"word": form, "pos": entry['pos'], "from_forms": True, "form_of": word, "definitions": []}
-      #       if not any([form_entry['pos'] == entry['pos'] and form_entry.get("form_of") == word for form_entry in all_entries_matching_word[form]]):
-      #         all_entries_matching_word[form].append(new_form_of)
+          process_defin_forms(defin)
       
       print("finished extra processing on dictionary output")
 
@@ -99,7 +45,6 @@ def main():
   try:
     with open(args.output, 'w') as outfile:
       for entry in all_entries_matching_word:
-        # outfile.write(json.dumps([entry, completed_dict[entry]]) + "\n")
         outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
 
   except IOError as e:
@@ -314,7 +259,7 @@ def get_gender_by_sense(sense):
     result.append("f")
   return result
 
-def find_lemmas_from_form_of_defin(defin, entries, forms_set=None, pos=None, first_call=True, exclude_lemma_if_word=False):
+def find_lemmas_from_form_of_defin(defin, entries, forms_set=None, pos=None, first_call=True):
   pos = pos if pos else defin['pos']
   forms_set = forms_set if forms_set else set()
   form = defin.get("form_of")
@@ -336,10 +281,38 @@ def find_lemmas_from_form_of_defin(defin, entries, forms_set=None, pos=None, fir
         for lemma in find_lemmas_from_form_of_defin(form_defin, entries, forms_set, pos, False)}
 
     if first_call:
-    # if first_call and exclude_lemma_if_word:
       child_lemmas = {lemma for lemma in child_lemmas if lemma != defin['word']}
       return child_lemmas if child_lemmas else {None}
     else:
       return child_lemmas if child_lemmas else {None}
 
+def process_defin_forms(defin):
+  if defin.get("forms"):
+    for form in defin.get("forms"):
+      if form == defin['word']:
+        None
+      elif defin.get("form_of") and any([
+          any([
+            lemma_defin.get("pos") == defin.get("pos") and
+            form in lemma_defin.get("forms", [])
+            for lemma_defin in all_entries_matching_word.get(lemma, [])
+          ])
+          for lemma in find_lemmas_from_form_of_defin(defin, all_entries_matching_word)
+        ]):
+        None
+      else:
+        if not any([
+          form_defin.get("pos") == defin.get("pos") and 
+          # this is somewhat naive, there can be more edges in the form_of graph that will lead to duplicate from_forms entries here. eg 'disfamada'
+          (defin['word'] in find_lemmas_from_form_of_defin(form_defin, all_entries_matching_word) or 
+          defin['word'] == form_defin.get('form_of') or
+          defin['word'] in form_defin.get("forms", [])
+          )
+
+          for form_defin in all_entries_matching_word.get(form, [])]):
+          new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": defin['word'], "definitions": []}
+          all_entries_matching_word[form].append(new_form_of)
+
+
 main()
+
