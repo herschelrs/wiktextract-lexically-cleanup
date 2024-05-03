@@ -8,7 +8,7 @@ python cleanup.py --input input.json --output output.jsonl
 ```
 Output is also in JSON Lines format, each line a list with two items, the first a word and the second a list of entries with that word. The output is intended to be read in line-by-line and used to construct a dictionary with each word as a key.
 
-Output file for full Spanish dictionary is 202MiB as of 2024-03-13.
+Output file for full Spanish dictionary is 193MiB as of 2024-05-03.
 
 ## Context and tradeoffs
 Wiktextract provides high quality but flawed computational dictionaries based on Wiktionary data. I was inspired by [Ebook dictionary creator](https://github.com/Vuizur/ebook_dictionary_creator) but needed a number of different features for my purposes. 
