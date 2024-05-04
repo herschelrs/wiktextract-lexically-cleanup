@@ -33,7 +33,7 @@ def main():
 
       for (word, entries) in list(all_entries_matching_word.items()):
         for defin in entries:
-          process_defin_forms(defin)
+          process_defin_forms(defin, all_entries_matching_word)
       
       print("finished extra processing on dictionary output")
 
@@ -286,7 +286,7 @@ def find_lemmas_from_form_of_defin(defin, entries, forms_set=None, pos=None, fir
     else:
       return child_lemmas if child_lemmas else {None}
 
-def process_defin_forms(defin):
+def process_defin_forms(defin, entries):
   if defin.get("forms"):
     for form in defin.get("forms"):
       if form == defin['word']:
@@ -295,24 +295,23 @@ def process_defin_forms(defin):
           any([
             lemma_defin.get("pos") == defin.get("pos") and
             form in lemma_defin.get("forms", [])
-            for lemma_defin in all_entries_matching_word.get(lemma, [])
+            for lemma_defin in entries.get(lemma, [])
           ])
-          for lemma in find_lemmas_from_form_of_defin(defin, all_entries_matching_word)
+          for lemma in find_lemmas_from_form_of_defin(defin, entries)
         ]):
         None
       else:
         if not any([
           form_defin.get("pos") == defin.get("pos") and 
           # this is somewhat naive, there can be more edges in the form_of graph that will lead to duplicate from_forms entries here. eg 'disfamada'
-          (defin['word'] in find_lemmas_from_form_of_defin(form_defin, all_entries_matching_word) or 
+          (defin['word'] in find_lemmas_from_form_of_defin(form_defin, entries) or 
           defin['word'] == form_defin.get('form_of') or
           defin['word'] in form_defin.get("forms", [])
           )
 
-          for form_defin in all_entries_matching_word.get(form, [])]):
+          for form_defin in entries.get(form, [])]):
           new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": defin['word'], "definitions": []}
-          all_entries_matching_word[form].append(new_form_of)
-
+          entries[form].append(new_form_of)
 
 main()
 
