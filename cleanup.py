@@ -68,12 +68,15 @@ def main():
         with open(args.srg_input_dir + filename, "r", encoding="windows-1252") as file:
           for line in file:
             form, lemma, tag = line.split()
+            if "+" in lemma:
+              lemma = lemma.split("+")[0]
             pos = srg_pos_conversion[tag[0]]
             if forms_lemmas[form][pos].get(lemma) is None:
               forms_lemmas[form][pos][lemma] = 0
             # srg doesn't have a line for the lemma pointing to itself
             if forms_lemmas[lemma][pos].get(lemma) is None:
-              forms_lemmas[lemma][pos][lemma] = 0
+              forms_lemmas[lemma][pos][lemma] = -1
+              # in this case I'm prioritizing srg after wiktionary. this is kind of a toss-up
 
       for word, entries in all_entries_matching_word.items():
         for entry in entries:
@@ -82,7 +85,7 @@ def main():
           for lemma in lemmas:
             if lemma is not None and forms_lemmas[word][pos].get(lemma) is None:
               # forms_lemmas[word][pos][lemma] = 0
-              forms_lemmas[word][pos][lemma] = -1
+              forms_lemmas[word][pos][lemma] = 0
       
       for key, value in forms_lemmas.items():
         new_value = {}
