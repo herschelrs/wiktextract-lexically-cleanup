@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import re
 from itertools import islice
+import os
 
 parsed_entries = []
 all_entries_matching_word = defaultdict(list)
@@ -17,10 +18,9 @@ def main():
   parser.add_argument('--input', type=str, required=True, help='The path of the input file')
   parser.add_argument('--output', type=str, required=True, help='The path of the output file')
   parser.add_argument('--no-post-process', type=bool, required=False, help='Just parse entries')
-  parser.add_argument('--lemmatization-table', type=str, required=False, help='Create lemmatization table, input file')
+  parser.add_argument('--lemmatization-table', type=str, required=False, help='Create lemmatization table, output file')
   parser.add_argument('--cde-input', type=str, required=False, help='Corpus del Español forms list')
   parser.add_argument('--srg-input-dir', type=str, required=False, help='Spanish Resource Grammar inflections list dir')
-  parser.add_argument('--lemmatization-table-output', type=str, required=False, help='Lemmatization table output file')
   
 
   args = parser.parse_args()
@@ -30,10 +30,8 @@ def main():
       raise Exception("generating lemmatization table can't be done with no-post-process.")
     if not args.cde_input:
       raise Exception("cde-input required if generating lemmatization table")
-    if not args.srg_input:
-      raise Exception("srg-input required if generating lemmatization table")
-    if not args.lemmatization_table_output:
-      raise Exception("lemmatization-table-output required if generating lemmatization table")
+    if not args.srg_input_dir:
+      raise Exception("srg-input-dir required if generating lemmatization table")
 
   try:
     
@@ -108,12 +106,12 @@ def main():
   
   try:
     if args.lemmatization_table:
-      with open(args.lemmatization_table_output, "w") as outfile:
+      with open(args.lemmatization_table, "w") as outfile:
         for entry in pos_lookup_table:
           outfile.write(json.dumps([entry, pos_lookup_table[entry]]) + "\n")
-      print(f"wrote lemmatization table to {args.lemmatization_table_output}")
+      print(f"wrote lemmatization table to {args.lemmatization_table}")
   except IOError as e:
-    print(f"An error occurred while writing to the file {args.lemmatization_table_output}: {e}")
+    print(f"An error occurred while writing to the file {args.lemmatization_table}: {e}")
     exit(1)
 
 
