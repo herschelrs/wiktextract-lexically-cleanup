@@ -38,5 +38,5 @@ Most words have only one entry but ~50k have several. Some of these correspond t
 - `form_of` - optional, gives the lemma of which the word is an inflected form.
 	- most `form_of` entries have in their `definition`s the entry's specific inflection and lemma, eg 'second-person singular imperative of fresar'
 - `from_alt_of` - optional, boolean, identifies `form_of` entries which came from sense with an `alt_of` tag in the Wiktextract data. These are usually alternative or deprecated spellings.
-- `from_forms` - optional, boolean, identifies `form_of` entries which were population from the list of inflected forms on a lemma, and which were absent as entries in the Wiktextract data.
+- `from_forms` - optional, boolean, identifies `form_of` entries which were populated from the list of inflected forms on a lemma, and which were absent as entries in the Wiktextract data.
     - note that these entries have an empty list for `definitions`
