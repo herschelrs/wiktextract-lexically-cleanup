@@ -21,7 +21,7 @@ python cleanup.py --input input.jsonl --output output.jsonl --lemmatization-tabl
 ## Context and tradeoffs
 Wiktextract provides high quality but flawed computational dictionaries based on Wiktionary data. I was inspired by [Ebook dictionary creator](https://github.com/Vuizur/ebook_dictionary_creator) but needed a number of different features for my purposes. 
 
-This script maintains the form_of key from Wiktextract, and tries to maintain label and gloss from the original entries, including for lower quality entries. There are code comments explaining some of the choices made.
+This script retains the form_of key from Wiktextract, and tries to maintain label and gloss from the original entries, including for lower quality entries. There are code comments explaining some of the choices made.
 
 Most words have only one entry but ~50k have several. Some of these correspond to multiple entries in the Wiktextract data (usually for unrelated etymologies or different parts of speech), and some come from entries which have been split up, eg. intersecting inflected forms for separate lemmas, or lemmas which intersect with inflected forms of other lemmas, etc.
 
