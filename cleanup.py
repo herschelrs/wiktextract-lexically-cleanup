@@ -2,8 +2,14 @@ import argparse
 import json
 from collections import defaultdict
 
+import re
+from itertools import islice
+
 parsed_entries = []
 all_entries_matching_word = defaultdict(list)
+forms_lemmas = defaultdict(lambda: defaultdict(dict))
+pos_lookup_table = {}
+
 
 def main():
   parser = argparse.ArgumentParser(description='Copy contents from an input file to an output file.')
@@ -11,10 +17,26 @@ def main():
   parser.add_argument('--input', type=str, required=True, help='The path of the input file')
   parser.add_argument('--output', type=str, required=True, help='The path of the output file')
   parser.add_argument('--no-post-process', type=bool, required=False, help='Just parse entries')
+  parser.add_argument('--lemmatization-table', type=str, required=False, help='Create lemmatization table, input file')
+  parser.add_argument('--cde-input', type=str, required=False, help='Corpus del Español forms list')
+  parser.add_argument('--srg-input-dir', type=str, required=False, help='Spanish Resource Grammar inflections list dir')
+  parser.add_argument('--lemmatization-table-output', type=str, required=False, help='Lemmatization table output file')
+  
 
   args = parser.parse_args()
 
+  if args.lemmatization_table:
+    if args.no_post_process:
+      raise Exception("generating lemmatization table can't be done with no-post-process.")
+    if not args.cde_input:
+      raise Exception("cde-input required if generating lemmatization table")
+    if not args.srg_input:
+      raise Exception("srg-input required if generating lemmatization table")
+    if not args.lemmatization_table_output:
+      raise Exception("lemmatization-table-output required if generating lemmatization table")
+
   try:
+    
     with open(args.input, 'r') as infile:
       for line in infile:
         parsed_entries.extend(parse_entry(json.loads(line)))
@@ -36,7 +58,39 @@ def main():
           process_defin_forms(defin, all_entries_matching_word)
       
       print("finished extra processing on dictionary output")
+      
+      with open(args.cde_input, "r", encoding="windows-1252") as file:
+        for line in islice(file, 8, None):
+          entry = line.split()
+          rank, lemma_freq, lemma, pos, form_freq, form, _ = entry
+          pos = davies_pos_conversion[pos]
+          forms_lemmas[form][pos][lemma] = int(form_freq)
 
+      for filename in [name for name in os.listdir(args.srg_input_dir) if name != "verbs-nogros"]:
+        with open(args.srg_input_dir + filename, "r", encoding="windows-1252") as file:
+          for line in file:
+            form, lemma, tag = line.split()
+            pos = srg_pos_conversion[tag[0]]
+            if forms_lemmas[form][pos].get(lemma) is None:
+              forms_lemmas[form][pos][lemma] = 0
+            # srg doesn't have a line for the lemma pointing to itself
+            if forms_lemmas[lemma][pos].get(lemma) is None:
+              forms_lemmas[lemma][pos][lemma] = 0
+
+      for word, entries in all_entries_matching_word.items():
+        for entry in entries:
+          lemmas = find_lemmas_from_form_of_defin(entry, all_entries_matching_word)
+          pos = wiktionary_pos_conversion[entry.get("pos")]
+          for lemma in lemmas:
+            if lemma is not None and forms_lemmas[word][pos].get(lemma) is None:
+              # forms_lemmas[word][pos][lemma] = 0
+              forms_lemmas[word][pos][lemma] = -1
+      
+      for key, value in forms_lemmas.items():
+        new_value = {}
+        for pos, lemmas_dict in value.items():
+          new_value[pos] = sorted(lemmas_dict.items(), key=lambda item: -item[1])[0][0]
+        pos_lookup_table[key] = new_value
       
   except FileNotFoundError:
     print(f"The input file {args.input} was not found.")
@@ -46,15 +100,56 @@ def main():
     with open(args.output, 'w') as outfile:
       for entry in all_entries_matching_word:
         outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
-
+    print(f"wrote main dictionary to {args.output}")
+    
   except IOError as e:
     print(f"An error occurred while writing to the file {args.output}: {e}")
     exit(1)
+  
+  try:
+    if args.lemmatization_table:
+      with open(args.lemmatization_table_output, "w") as outfile:
+        for entry in pos_lookup_table:
+          outfile.write(json.dumps([entry, pos_lookup_table[entry]]) + "\n")
+      print(f"wrote lemmatization table to {args.lemmatization_table_output}")
+  except IOError as e:
+    print(f"An error occurred while writing to the file {args.lemmatization_table_output}: {e}")
+    exit(1)
 
-  print(f"wrote output to {args.output}")
 
-from collections import defaultdict
-import re
+# full pos list at https://www.corpusdelespanol.org/web-dial/help/posList.asp
+davies_pos_conversion = defaultdict(lambda: "o")
+davies_pos_conversion.update({
+    "j": "a",
+    "m": "n",
+    "n": "n",
+    "o": "n",
+    "r": "r",
+    "v": "v",
+})
+
+srg_pos_conversion = defaultdict(lambda: "o")
+    # "o" is "other", these almost entirly? mostly? don't intersect on forms
+srg_pos_conversion.update({
+    "A": "a",
+    "N": "n",
+    "R": "r",
+    "V": "v",
+    "Z": "n",
+    # treat it as a noun, that's fine
+    "W": "n",
+})
+
+wiktionary_pos_conversion = defaultdict(lambda: "o")
+wiktionary_pos_conversion.update({
+    "adj": "a", 
+    'adv': 'r',
+    "noun": 'n',
+    'name': 'n',
+    'num': 'n',
+    "verb": 'v',
+})
+
 
 # this list is likely incomplete, and in any case was only calculated against spanish
 TAGS_INCLUDE_AS_GLOSS = {'uncountable': 'uncountable', 'plural-only': 'only in the plural', 'invariable': 'invariable'}
@@ -315,3 +410,4 @@ def process_defin_forms(defin, entries):
 
 main()
 
+9
