@@ -88,7 +88,6 @@ def main():
           pos = wiktionary_pos_conversion[entry.get("pos")]
           for lemma in lemmas:
             if forms_lemmas[word][pos].get(lemma) is None:
-              # forms_lemmas[word][pos][lemma] = 0
               forms_lemmas[word][pos][lemma] = 0
       
       for key, value in forms_lemmas.items():
