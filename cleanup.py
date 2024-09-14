@@ -57,10 +57,12 @@ def main():
       
       print("finished extra processing on dictionary output")
       
+      # I'm lowercasing everything, this is slightly problematic but is a fine model for lemmatization at least for spanish
       with open(args.cde_input, "r", encoding="windows-1252") as file:
         for line in islice(file, 8, None):
           entry = line.split()
           rank, lemma_freq, lemma, pos, form_freq, form, _ = entry
+          (form, lemma) = (form.lower(), lemma.lower())
           pos = davies_pos_conversion[pos]
           forms_lemmas[form][pos][lemma] = int(form_freq)
 
@@ -68,6 +70,7 @@ def main():
         with open(args.srg_input_dir + filename, "r", encoding="windows-1252") as file:
           for line in file:
             form, lemma, tag = line.split()
+            (form, lemma) = (form.lower(), lemma.lower())
             if "+" in lemma:
               lemma = lemma.split("+")[0]
             pos = srg_pos_conversion[tag[0]]
@@ -80,10 +83,11 @@ def main():
 
       for word, entries in all_entries_matching_word.items():
         for entry in entries:
-          lemmas = find_lemmas_from_form_of_defin(entry, all_entries_matching_word)
+          word = word.lower()
+          lemmas = [lemma.lower() for lemma in find_lemmas_from_form_of_defin(entry, all_entries_matching_word) if lemma is not None]
           pos = wiktionary_pos_conversion[entry.get("pos")]
           for lemma in lemmas:
-            if lemma is not None and forms_lemmas[word][pos].get(lemma) is None:
+            if forms_lemmas[word][pos].get(lemma) is None:
               # forms_lemmas[word][pos][lemma] = 0
               forms_lemmas[word][pos][lemma] = 0
       
