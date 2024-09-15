@@ -10,7 +10,13 @@ Output is also in JSON Lines format, each line a list with two items, the first 
 
 Output file for full Spanish dictionary is 193MiB as of 2024-05-03.
 
-### Lemmatization Table
+#### Lemma List
+The script can optionally generate a list of lemmas present. This should be invoked with:
+```
+python cleanup.py --input input.jsonl --output output.jsonl --lemma-list="lemma_list_output"
+```
+
+#### Lemmatization Table
 The script can also prepare a lemmatization table using data from the [Corpus Del Español](https://www.corpusdelespanol.org/) and the [Spanish Resource Grammar](https://web.archive.org/web/20100618195532/http://www.upf.edu/pdi/iula/montserrat.marimon/srg.html).
 
 Should be invoked with:

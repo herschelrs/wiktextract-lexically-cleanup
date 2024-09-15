@@ -11,6 +11,7 @@ all_entries_matching_word = defaultdict(list)
 forms_lemmas = defaultdict(lambda: defaultdict(dict))
 pos_lookup_table = {}
 
+lemma_set = set()
 
 def main():
   parser = argparse.ArgumentParser(description='Copy contents from an input file to an output file.')
@@ -21,7 +22,7 @@ def main():
   parser.add_argument('--lemmatization-table', type=str, required=False, help='Create lemmatization table, output file')
   parser.add_argument('--cde-input', type=str, required=False, help='Corpus del Español forms list')
   parser.add_argument('--srg-input-dir', type=str, required=False, help='Spanish Resource Grammar inflections list dir')
-  
+  parser.add_argument('--lemma-list', type=str, required=False, help='Generate list of lemmas, output file')
 
   args = parser.parse_args()
 
@@ -32,7 +33,9 @@ def main():
       raise Exception("cde-input required if generating lemmatization table")
     if not args.srg_input_dir:
       raise Exception("srg-input-dir required if generating lemmatization table")
-
+  if args.no_post_process and args.lemma_list:
+    print("lemma list won't be generated if no-post-process is true")
+  
   try:
     
     with open(args.input, 'r') as infile:
@@ -56,6 +59,12 @@ def main():
           process_defin_forms(defin, all_entries_matching_word)
       
       print("finished extra processing on dictionary output")
+      
+      if args.lemma_list:
+        for entries in all_entries_matching_word.values():
+          for entry in entries:
+            lemma_set.update(find_lemmas_from_form_of_defin(entry, all_entries_matching_word))
+        lemma_set.remove(None)
       
       # I'm lowercasing everything, this is slightly problematic but is a fine model for lemmatization at least for spanish
       with open(args.cde_input, "r", encoding="windows-1252") as file:
@@ -116,6 +125,13 @@ def main():
         for entry in pos_lookup_table:
           outfile.write(json.dumps([entry, pos_lookup_table[entry]]) + "\n")
       print(f"wrote lemmatization table to {args.lemmatization_table}")
+    
+    if args.lemma_list:
+      with open(args.lemma_list, "w") as outfile:
+        for lemma in lemma_set:
+          outfile.write(lemma + "\n")
+      print(f"wrote lemma list to {args.lemma_list}")
+      
   except IOError as e:
     print(f"An error occurred while writing to the file {args.lemmatization_table}: {e}")
     exit(1)
@@ -389,7 +405,7 @@ def process_defin_forms(defin, entries):
   if defin.get("forms"):
     for form in defin.get("forms"):
       if form == defin['word']:
-        None
+        pass
       elif defin.get("form_of") and any([
           any([
             lemma_defin.get("pos") == defin.get("pos") and
@@ -398,7 +414,7 @@ def process_defin_forms(defin, entries):
           ])
           for lemma in find_lemmas_from_form_of_defin(defin, entries)
         ]):
-        None
+        pass
       else:
         if not any([
           form_defin.get("pos") == defin.get("pos") and 
@@ -413,5 +429,3 @@ def process_defin_forms(defin, entries):
           entries[form].append(new_form_of)
 
 main()
-
-9
