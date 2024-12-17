@@ -1,4 +1,4 @@
-Cleanup script for [Wiktextract](https://github.com/tatuylonen/wiktextract) data for use with [Glossa](https://github.com/herschelrs/glossa-frontend). Currently only tested for Spanish.
+Cleanup script for [Wiktextract](https://github.com/tatuylonen/wiktextract) data for use with [Glossa](https://glossa.app/). Currently only tested for Spanish.
 ## Usage
 Requires [Wiktextract](https://github.com/tatuylonen/wiktextract) dictionary in [JSON Lines](https://jsonlines.org/) format, which can be downloaded from [kaikki.org](https://kaikki.org/).
 
