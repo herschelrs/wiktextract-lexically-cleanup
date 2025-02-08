@@ -38,6 +38,7 @@ Most words have only one entry but ~50k have several. Some of these correspond t
     - `label` usually includes morphological, syntactic, or dialectological information, and `gloss` is a secondary gloss or disambiguation for the definition.
     - note that `definition` is missing or `null` in a very small number of entries for Spanish.
 - `forms` - optional, list of inflected forms
+- `full_forms` - optional; single-token lemmas with multi-token forms have the correct form extracted, in these cases the original list of forms is in this key.
 - `form_of` - optional, gives the lemma of which the word is an inflected form.
 	- most `form_of` entries have in their `definition`s the entry's specific inflection and lemma, eg 'second-person singular imperative of fresar'
 - `from_alt_of` - optional, boolean, identifies `form_of` entries which came from sense with an `alt_of` tag in the Wiktextract data. These are usually alternative or deprecated spellings.

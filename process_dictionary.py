@@ -14,6 +14,7 @@ def process_dictionary_data(input_file, no_post_process, lemmatization_table, cd
       forms_lemmas = defaultdict(lambda: defaultdict(dict))
       pos_lookup_table = {}
       lemma_set = set()
+      reflexive_verbs = {}
 
       with open(input_file, 'r') as infile:
           for line in infile:
@@ -24,16 +25,59 @@ def process_dictionary_data(input_file, no_post_process, lemmatization_table, cd
         all_entries_matching_word[entry['word']].append(entry)
 
       if not no_post_process:
-        # some forms lists contain duplicates:
-        for word in all_entries_matching_word:
-          for defin in all_entries_matching_word[word]:
-            if defin.get("forms"):
-              defin['forms'] = list(set(defin['forms']))
 
+        for word, entries in list(all_entries_matching_word.items()):
+          # we're going to iterate over the dictionary while we're modifying it, the details in this case are fine
+          if word.endswith("rse"):
+            non_reflexive_lemma = word[:-2]
+            qualifying_defins = [defin for defin in entries if is_defin_reflexive(defin)]
+            if not qualifying_defins:
+              continue
+
+            if len(qualifying_defins) == len(entries):
+              del all_entries_matching_word[word]
+            else:
+              for defin in qualifying_defins:
+                all_entries_matching_word[word].remove(defin)
+            
+            processed_qualifying_defins = [process_reflexive_defin(defin, non_reflexive_lemma) for defin in qualifying_defins]
+            if not all_entries_matching_word.get(non_reflexive_lemma) or all(defin.get("form_of") == word for defin in all_entries_matching_word.get(non_reflexive_lemma, [])):
+              all_entries_matching_word[non_reflexive_lemma] = processed_qualifying_defins
+            else:
+              for defin in all_entries_matching_word[non_reflexive_lemma]:
+                if defin.get("form_of") == word:
+                  all_entries_matching_word[non_reflexive_lemma].remove(defin)
+              all_entries_matching_word[non_reflexive_lemma].extend(processed_qualifying_defins)
+            
+            reflexive_verbs[word] = (non_reflexive_lemma, processed_qualifying_defins)
+        
+        for entries in all_entries_matching_word.values():
+          for defin in entries:
+            form_of = defin.get("form_of")
+            if form_of and form_of in reflexive_verbs:
+              defin["form_of"] = reflexive_verbs[form_of][0]
+        
+        # extract correct form from multi-token forms
+        for word, entries in all_entries_matching_word.items():
+          if len(word.split()) == 1:
+            for defin in entries:
+              forms = defin.get("forms")
+              if forms:
+                defin['forms'] = list(set(last_token for last_token in (form.split()[-1] for form in forms) if last_token not in EXCLUDED_MALFORMED_MULTI_TOKEN_FORMS_LAST_TOKEN))
+                # this works correctly in all but literally 18 cases, and these are all malformed entries anyway
+                if any(len(form.split()) > 1 for form in forms):
+                  defin["full_forms"] = list(set(forms))
+              else:
+                continue
+          else:
+            for defin in entries:
+                if defin.get("forms"):
+                    defin['forms'] = list(set(defin['forms']))
+            # for multi-token lemmas it's in principle possible to extract the "actual" lemma and all its forms, but nto worth it
 
         for (word, entries) in list(all_entries_matching_word.items()):
           for defin in entries:
-            process_defin_forms(defin, all_entries_matching_word)
+            insert_from_forms_entries(defin, all_entries_matching_word)
         
         print("finished extra processing on dictionary output")
         
@@ -97,11 +141,8 @@ def process_dictionary_data(input_file, no_post_process, lemmatization_table, cd
     except FileNotFoundError as e:
         print(f"FileNotFoundError: {e}")
         return None
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return None
     
-
+EXCLUDED_MALFORMED_MULTI_TOKEN_FORMS_LAST_TOKEN = {"gender-neutral", "meaning"}
 
 # full pos list at https://www.corpusdelespanol.org/web-dial/help/posList.asp
 davies_pos_conversion = defaultdict(lambda: "o")
@@ -136,6 +177,26 @@ wiktionary_pos_conversion.update({
     "verb": 'v',
 })
 
+def is_defin_reflexive(defin: dict):
+  return (defin.get("word", "").endswith("rse") and
+   defin.get("pos") == "verb" and 
+   len(defin.get("word", "").split()) == 1 and 
+   not defin.get("form_of"))
+  # there's two cases, as of the data from 2024-05 ('verse' and 'reverse', lol) for which the fourth criterion applies
+  # as it happens, both of those are the only cases of entries with word in -rse, where there's more than one
+  # entry listed here in all_entries_matching_word
+
+def process_reflexive_defin(defin: dict, new_lemma: str):
+  for definition in defin.get("definitions", []):
+    if not "reflexive" in f"{definition.get('definition')}{definition.get('label')}{definition.get('gloss')}":
+      if definition.get("label"):
+        definition['label'] = "reflexive, " + definition['label']
+      else:
+        definition['label'] = 'reflexive'
+  if defin.get("forms"):
+    defin['forms'].append(defin['word'])
+  defin['word'] = new_lemma
+  return defin
 
 # this list is likely incomplete, and in any case was only calculated against spanish
 TAGS_INCLUDE_AS_GLOSS = {'uncountable': 'uncountable', 'plural-only': 'only in the plural', 'invariable': 'invariable'}
@@ -367,30 +428,29 @@ def find_lemmas_from_form_of_defin(defin, entries, forms_set=None, pos=None, fir
     else:
       return child_lemmas if child_lemmas else {None}
 
-def process_defin_forms(defin, entries):
+def insert_from_forms_entries(defin, entries):
   if defin.get("forms"):
     for form in defin.get("forms"):
       if form == defin['word']:
         pass
-      elif defin.get("form_of") and any([
-          any([
+      elif defin.get("form_of") and any(
+          any(
             lemma_defin.get("pos") == defin.get("pos") and
             form in lemma_defin.get("forms", [])
             for lemma_defin in entries.get(lemma, [])
-          ])
+          )
           for lemma in find_lemmas_from_form_of_defin(defin, entries)
-        ]):
+        ):
         pass
       else:
-        if not any([
-          form_defin.get("pos") == defin.get("pos") and 
-          # this is somewhat naive, there can be more edges in the form_of graph that will lead to duplicate from_forms entries here. eg 'disfamada'
-          (defin['word'] in find_lemmas_from_form_of_defin(form_defin, entries) or 
-          defin['word'] == form_defin.get('form_of') or
-          defin['word'] in form_defin.get("forms", [])
-          )
-
-          for form_defin in entries.get(form, [])]):
+        if not any(
+            form_defin.get("pos") == defin.get("pos") and 
+            # this is somewhat naive, there can be more edges in the form_of graph that will lead to duplicate from_forms entries here. eg 'disfamada'
+            (defin['word'] in find_lemmas_from_form_of_defin(form_defin, entries) or 
+            defin['word'] == form_defin.get('form_of') or
+            defin['word'] in form_defin.get("forms", [])
+            )
+          for form_defin in entries.get(form, [])):
           new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": defin['word'], "definitions": []}
           entries[form].append(new_form_of)
 
