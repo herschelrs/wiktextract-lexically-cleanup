@@ -18,7 +18,7 @@ The script can also prepare a lemmatization table using data from the [Corpus De
 
 Should be invoked with:
 ```
-python cleanup.py --input input.jsonl --output output.jsonl --lemmatization-table="table-output.jsonl" --cde-input="cde_forms.txt" --srg-input-dir="srg/freeling/es/MM/"
+python cleanup.py --input input.jsonl --output output.jsonl --lemma-list="lemmas" --lemmatization-table="table-output.jsonl" --cde-input="cde_forms.txt" --srg-input-dir="srg/freeling/es/MM/"
 ```
 
 ## Context and tradeoffs
