@@ -312,7 +312,7 @@ def parse_multiple_form_of(group):
   if any([len(sense['glosses']) != 2 for sense in group]):
     return [{"definition": sense['glosses'][0]} for sense in group]
   else:
-    lemma_string = remove_ending_colon(group[0]['raw_glosses'][0].split(" of ")[1].strip())
+    lemma_string = remove_ending_colon(group[0]['glosses'][0].split("\n")[0].split(" of ")[1].strip())
     result = []
     for sense in group:
       definition = sense['glosses'][-1]
