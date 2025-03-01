@@ -8,7 +8,7 @@ python cleanup.py --input input.jsonl --output output.jsonl
 ```
 Output is also in JSON Lines format, each line a list with two items, the first a word and the second a list of entries with that word. The output is intended to be read in line-by-line and used to construct a dictionary with each word as a key.
 
-Output file for full Spanish dictionary is 196MiB as of 2025-02-10.
+Output file for full Spanish dictionary is 212MiB as of 2025-03-01.
 
 #### Lemma List
 The script can optionally generate a list of lemmas present in the processed wiktextract dictionary. Note this ignores any extra lemmas that might be included in the lemmatization table below. This feature can be be invoked with `--lemma-list="lemma_list_output"` 
