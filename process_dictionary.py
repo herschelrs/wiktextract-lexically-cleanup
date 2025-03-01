@@ -195,6 +195,7 @@ def process_reflexive_defin(defin: dict, new_lemma: str):
         definition['label'] = 'reflexive'
   if defin.get("forms"):
     defin['forms'].append(defin['word'])
+    defin['forms'].append(new_lemma)
   defin['word'] = new_lemma
   return defin
 
@@ -374,11 +375,11 @@ def pre_parse_entry(entry):
     pre_parse_combined_with_form_of(entry)
     return
 
-def extract_inflected_forms(forms):
+def extract_inflected_forms(forms, word):
   return [item for item in
           [form['form'] for form in forms
             if all([tag not in form['tags'] for tag in ['table-tags', 'inflection-template', 'class']]) ]
-          if item != '-']
+          if item != '-'] + [word]
 
 def parse_entry(entry):
   pre_parse_entry(entry)
@@ -386,7 +387,7 @@ def parse_entry(entry):
   main_props = {"word": entry['word'], "pos": entry['pos'], "f_pos": wiktionary_pos_conversion[entry.get("pos")]}
 
   if entry.get('forms'):
-    main_props['forms'] = extract_inflected_forms(entry['forms'])
+    main_props['forms'] = extract_inflected_forms(entry['forms'], entry['word'])
 
   sense_groups = group_senses(entry)
   return [{**main_props, **parse_sense_group(group, entry)} for group in sense_groups]
