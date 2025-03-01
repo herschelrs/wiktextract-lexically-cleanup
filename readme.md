@@ -31,6 +31,7 @@ Most words have only one entry but ~50k have several. Some of these correspond t
 ## Spec for entries
 - `word` - the word form
 - `pos` - part of speech
+- `f_pos` - highly simplified part of speech, only `'n'`, `'v'`, `'a'`, `'r'`, or `'o'`
 - `gender` - optional, a *list* of genders as strings `'f'` or `'m'`. 
     - uses both genders for words where both genders are valid
     - unfortunately doesn't include a gender for modern gender-neutral terms like 'amigue'

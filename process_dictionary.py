@@ -383,7 +383,7 @@ def extract_inflected_forms(forms):
 def parse_entry(entry):
   pre_parse_entry(entry)
 
-  main_props = {"word": entry['word'], "pos": entry['pos']}
+  main_props = {"word": entry['word'], "pos": entry['pos'], "f_pos": wiktionary_pos_conversion[entry.get("pos")]}
 
   if entry.get('forms'):
     main_props['forms'] = extract_inflected_forms(entry['forms'])
@@ -451,6 +451,6 @@ def insert_from_forms_entries(defin, entries):
             defin['word'] in form_defin.get("forms", [])
             )
           for form_defin in entries.get(form, [])):
-          new_form_of = {"word": form, "pos": defin['pos'], "from_forms": True, "form_of": defin['word'], "definitions": []}
+          new_form_of = {"word": form, "pos": defin['pos'], "f_pos": wiktionary_pos_conversion[defin.get("pos")], "from_forms": True, "form_of": defin['word'], "definitions": []}
           entries[form].append(new_form_of)
 
