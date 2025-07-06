@@ -13,6 +13,7 @@ def main():
   parser.add_argument('--cde-input', type=str, required=False, help='Corpus del Español forms list')
   parser.add_argument('--srg-input-dir', type=str, required=False, help='Spanish Resource Grammar inflections list dir')
   parser.add_argument('--lemma-list', type=str, required=False, help='Generate list of lemmas, output file')
+  parser.add_argument('--one-entry-per-line', action='store_true', help='Output each entry on a separate line instead of grouping by word')
 
   args = parser.parse_args()
 
@@ -44,8 +45,13 @@ def main():
 
   try:
     with open(args.output, 'w') as outfile:
-      for entry in all_entries_matching_word:
-        outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
+      if args.one_entry_per_line:
+        for entry in all_entries_matching_word:
+          for entry_dict in all_entries_matching_word[entry]:
+            outfile.write(json.dumps(entry_dict) + "\n")
+      else:
+        for entry in all_entries_matching_word:
+          outfile.write(json.dumps([entry, all_entries_matching_word[entry]]) + "\n")
     print(f"wrote main dictionary to {args.output}")
     
   except IOError as e:

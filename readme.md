@@ -1,14 +1,19 @@
 Cleanup script for [Wiktextract](https://github.com/tatuylonen/wiktextract) data for use with [Glossa](https://glossa.app/). Currently only tested for Spanish.
 ## Usage
-Requires [Wiktextract](https://github.com/tatuylonen/wiktextract) dictionary in [JSON Lines](https://jsonlines.org/) format, which can be downloaded from [kaikki.org](https://kaikki.org/).
+Requires [Wiktextract](https://github.com/tatuylonen/wiktextract) dictionary in [JSON Lines](https://jsonlines.org/) format, which can be downloaded from [kaikki.org](https://kaikki.org/). Note, the full dataset should be filtered first for only Spanish entries.
 
 Should be invoked with:
 ```
 python cleanup.py --input input.jsonl --output output.jsonl
 ```
-Output is also in JSON Lines format, each line a list with two items, the first a word and the second a list of entries with that word. The output is intended to be read in line-by-line and used to construct a dictionary with each word as a key.
+Output is also in JSON Lines format, each line a list with two items, the first a word and the second a list of entries with that word.
 
-Output file for full Spanish dictionary is 212MiB as of 2025-03-01.
+For flattened output with one entry per line, use `--one-entry-per-line`:
+```
+python cleanup.py --input input.jsonl --output output.jsonl --one-entry-per-line
+```
+
+Output file for full Spanish dictionary in default format is 215MiB as of 2025-07-05.
 
 #### Lemma List
 The script can optionally generate a list of lemmas present in the processed wiktextract dictionary. Note this ignores any extra lemmas that might be included in the lemmatization table below. This feature can be be invoked with `--lemma-list="lemma_list_output"` 
