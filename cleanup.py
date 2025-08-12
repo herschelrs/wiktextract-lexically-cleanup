@@ -14,8 +14,12 @@ def main():
   parser.add_argument('--srg-input-dir', type=str, required=False, help='Spanish Resource Grammar inflections list dir')
   parser.add_argument('--lemma-list', type=str, required=False, help='Generate list of lemmas, output file')
   parser.add_argument('--one-entry-per-line', action='store_true', help='Output each entry on a separate line instead of grouping by word')
+  parser.add_argument('--no-wiktionary', action='store_true', help='Exclude wiktionary data from lemmatization table (only use CDE and SRG data)')
 
   args = parser.parse_args()
+
+  if args.no_wiktionary and not args.lemmatization_table:
+    raise Exception("--no-wiktionary can only be used when --lemmatization-table is specified")
 
   if args.lemmatization_table:
     if args.no_post_process:
@@ -33,7 +37,8 @@ def main():
     lemmatization_table=bool(args.lemmatization_table),
     cde_input=args.cde_input,
     srg_input_dir=args.srg_input_dir,
-    generate_lemma_list=bool(args.lemma_list)
+    generate_lemma_list=bool(args.lemma_list),
+    no_wiktionary=args.no_wiktionary
   )
 
   if result is None:

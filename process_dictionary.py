@@ -6,7 +6,7 @@ from itertools import islice
 import os
 
 
-def process_dictionary_data(input_file, no_post_process, lemmatization_table, cde_input, srg_input_dir, generate_lemma_list):
+def process_dictionary_data(input_file, no_post_process, lemmatization_table, cde_input, srg_input_dir, generate_lemma_list, no_wiktionary=False):
     """Process dictionary data and return processed entries and optional lookup tables."""
     try:
       parsed_entries = []
@@ -111,14 +111,15 @@ def process_dictionary_data(input_file, no_post_process, lemmatization_table, cd
                 forms_lemmas[lemma][pos][lemma] = -1
                 # in this case I'm prioritizing srg after wiktionary. this is kind of a toss-up
 
-        for word, entries in all_entries_matching_word.items():
-          for entry in entries:
-            word = word.lower()
-            lemmas = [lemma.lower() for lemma in find_lemmas_from_form_of_defin(entry, all_entries_matching_word) if lemma is not None]
-            pos = wiktionary_pos_conversion[entry.get("pos")]
-            for lemma in lemmas:
-              if forms_lemmas[word][pos].get(lemma) is None:
-                forms_lemmas[word][pos][lemma] = 0
+        if not no_wiktionary:
+          for word, entries in all_entries_matching_word.items():
+            for entry in entries:
+              word = word.lower()
+              lemmas = [lemma.lower() for lemma in find_lemmas_from_form_of_defin(entry, all_entries_matching_word) if lemma is not None]
+              pos = wiktionary_pos_conversion[entry.get("pos")]
+              for lemma in lemmas:
+                if forms_lemmas[word][pos].get(lemma) is None:
+                  forms_lemmas[word][pos][lemma] = 0
         
         for key, value in forms_lemmas.items():
           new_value = {}

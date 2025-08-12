@@ -26,6 +26,11 @@ Should be invoked with:
 python cleanup.py --input input.jsonl --output output.jsonl --lemma-list="lemmas" --lemmatization-table="table-output.jsonl" --cde-input="cde_forms.txt" --srg-input-dir="srg/freeling/es/MM/"
 ```
 
+To exclude wiktionary data from the lemmatization table (using only CDE and SRG data), add the `--no-wiktionary` flag:
+```
+python cleanup.py --input input.jsonl --output output.jsonl --lemmatization-table="table-output.jsonl" --cde-input="cde_forms.txt" --srg-input-dir="srg/freeling/es/MM/" --no-wiktionary
+```
+
 ## Context and tradeoffs
 Wiktextract provides high quality but flawed computational dictionaries based on Wiktionary data. I was inspired by [Ebook dictionary creator](https://github.com/Vuizur/ebook_dictionary_creator) but needed a number of different features for my purposes. 
 
