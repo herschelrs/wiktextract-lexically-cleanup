@@ -1,4 +1,6 @@
 Cleanup script for [Wiktextract](https://github.com/tatuylonen/wiktextract) data for use with [Lexically](https://lexically.app/). Currently only tested for Spanish.
+
+See also output available on [huggingface](https://huggingface.co/datasets/herschelrs/es_wiktextract_lexically).
 ## Usage
 Requires [Wiktextract](https://github.com/tatuylonen/wiktextract) dictionary in [JSON Lines](https://jsonlines.org/) format, which can be downloaded from [kaikki.org](https://kaikki.org/). Note, the full dataset should be filtered first for only Spanish entries.
 
