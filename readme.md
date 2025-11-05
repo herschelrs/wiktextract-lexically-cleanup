@@ -18,7 +18,7 @@ python cleanup.py --input input.jsonl --output output.jsonl --one-entry-per-line
 Output file for full Spanish dictionary in default format is 215MiB as of 2025-07-05.
 
 #### Lemma List
-The script can optionally generate a list of lemmas present in the processed wiktextract dictionary. Note this ignores any extra lemmas that might be included in the lemmatization table below. This feature can be be invoked with `--lemma-list="lemma_list_output"` 
+The script can optionally generate a newline delimited list of lemmas present in the processed wiktextract dictionary. Note this ignores any extra lemmas that might be included in the lemmatization table below. This feature can be be invoked with `--lemma-list="lemma_list_output"` 
 
 #### Lemmatization Table
 The script can also prepare a lemmatization table using data from the [Corpus Del Español](https://www.corpusdelespanol.org/) and the [Spanish Resource Grammar](https://web.archive.org/web/20100618195532/http://www.upf.edu/pdi/iula/montserrat.marimon/srg.html).
@@ -32,6 +32,8 @@ To exclude wiktionary data from the lemmatization table (using only CDE and SRG 
 ```
 python cleanup.py --input input.jsonl --output output.jsonl --lemmatization-table="table-output.jsonl" --cde-input="cde_forms.txt" --srg-input-dir="srg/freeling/es/MM/" --no-wiktionary
 ```
+
+The lemmatization table is in JSON Lines, each line has an array with two elements: the first element is a string for a form to be lemmatized, and the second element is a dictionary with at least one key, of only the string values allowed for `f_pos` on entries (see below), and whose value is the lemma which is the most frequent lemma for that part of speech, for that form. Eg.: `["estados", {"n": "estado", "v": "estar"}]`, 'estados' can be an inflected form of both 'estado' (noun) and 'estar' (verb).
 
 ## Context and tradeoffs
 Wiktextract provides high quality but flawed computational dictionaries based on Wiktionary data. I was inspired by [Ebook dictionary creator](https://github.com/Vuizur/ebook_dictionary_creator) but needed a number of different features for my purposes. 
@@ -51,7 +53,7 @@ Most words have only one entry but ~50k have several. Some of these correspond t
     - `label` usually includes morphological, syntactic, or dialectological information, and `gloss` is a secondary gloss or disambiguation for the definition.
     - note that `definition` is missing or `null` in a very small number of entries for Spanish.
 - `forms` - optional, list of inflected forms
-- `full_forms` - optional; single-token lemmas with multi-token forms have the correct form extracted, in these cases the original list of forms is in this key.
+- `full_forms` - optional; single-token lemmas with multi-token forms have `forms` with the correct single-form extracted, in these cases the original list of forms is available under this key.
 - `form_of` - optional, gives the lemma of which the word is an inflected form.
 	- most `form_of` entries have in their `definition`s the entry's specific inflection and lemma, eg 'second-person singular imperative of fresar'
 - `from_alt_of` - optional, boolean, identifies `form_of` entries which came from sense with an `alt_of` tag in the Wiktextract data. These are usually alternative or deprecated spellings.
